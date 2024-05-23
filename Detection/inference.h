@@ -24,16 +24,14 @@ struct Detection
 class Inference
 {
 public:
-    Inference(const std::string &onnxModelPath, const cv::Size &modelInputShape = {640, 640}, const std::string &classesTxtFile = "", const bool &runWithCuda = true);
+    Inference(const std::string &onnxModelPath, const cv::Size &modelInputShape = {640, 640});
     std::vector<Detection> runInference(const cv::Mat &input);
 
 private:
-    void loadClassesFromFile();
     void loadOnnxNetwork();
     cv::Mat formatToSquare(const cv::Mat &source);
 
     std::string modelPath{};
-    std::string classesPath{};
     bool cudaEnabled{};
 
     std::vector<std::string> classes{"drone"};

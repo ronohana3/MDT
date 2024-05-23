@@ -15,8 +15,7 @@ using namespace cmt;
 int main()
 {
 
-    bool runOnGPU = false;
-    Inference inf("D:\\IronDrone\\MDT\\Detection\\best.onnx", cv::Size(640, 640), "classes.txt", runOnGPU);
+    Inference inf("D:\\IronDrone\\MDT\\Detection\\best.onnx", cv::Size(640, 640));
 
     namedWindow("Stream");
     VideoCapture cap("D:\\IronDrone\\MDT\\assets\\test3.mp4");
