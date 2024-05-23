@@ -111,7 +111,7 @@ void Consensus::findConsensus(const vector<Point2f> & points, const vector<int> 
     {
         votes[i] = points[i] - scale * rotate(points_normalized[classes[i]], rotation);
     }
-
+    
     t_index N = points.size();
 
     float * D = new float[N*(N-1)/2]; //This is a lot of memory, so we put it on the heap
@@ -169,7 +169,7 @@ void Consensus::findConsensus(const vector<Point2f> & points, const vector<int> 
     {
         T[i] = nodes.Find(i);
     }
-
+    
     //Find largest cluster
     int S_max = distance(S, max_element(S, S + 2*N-1));
 
@@ -177,7 +177,7 @@ void Consensus::findConsensus(const vector<Point2f> & points, const vector<int> 
     points_inlier.reserve(S[S_max]);
     classes_inlier.reserve(S[S_max]);
     center.x = center.y = 0;
-
+    
     for (size_t i = 0; i < points.size(); i++)
     {
         //If point is in consensus cluster
@@ -193,10 +193,10 @@ void Consensus::findConsensus(const vector<Point2f> & points, const vector<int> 
 
     center.x /= points_inlier.size();
     center.y /= points_inlier.size();
-
+    
     delete[] D;
 	delete[] S;
-	delete[] T;
+	delete[] T;  
 }
 
 } /* namespace cmt */

@@ -15,6 +15,8 @@ set(SOURCE_FILES
     Tracking/Matcher.cpp
     Tracking/Tracker.cpp
     Tracking/fastcluster/fastcluster.cpp
+    Detection/inference.cpp
+    Navigation/NavigationController.cpp
     main.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

@@ -1,157 +1,119 @@
 #include <iostream>
-#include <opencv2/opencv.hpp>
+#include <vector>
 #include <filesystem>
+
+#include <opencv2/opencv.hpp>
+
+#include "Tracking/CMT.h"
+#include "Detection/inference.h"
+#include "Navigation/NavigationController.hpp"
 
 using namespace cv;
 using namespace std;
-
-#define MAX_FRAMES = 1000
-#define LEARNING_RATE = -1   
-
-vector<Point2f> toPoints(const vector<KeyPoint>& keyPoints)
-{
-    vector<Point2f> points;
-    for (auto& keyPoint : keyPoints)
-    {
-        points.push_back(keyPoint.pt);
-    }
-    return points;
-}
+using namespace cmt;
 
 int main()
 {
-    
-    Ptr<BackgroundSubtractorMOG2> fgbg = createBackgroundSubtractorMOG2();
-    Mat frame;
 
+    bool runOnGPU = false;
+    Inference inf("D:\\IronDrone\\MDT\\Detection\\best.onnx", cv::Size(640, 640), "classes.txt", runOnGPU);
 
-    // Mat frame, currFrame, prevFrame;
-    // vector<KeyPoint> prevFrameKeyPoints;
-    // vector<Point2f> prevFramePoints;
-    
-    // Ptr<FastFeatureDetector> detector = FastFeatureDetector::create();
-    
     namedWindow("Stream");
-
-    VideoCapture cap(0);
-    // VideoCapture cap("../../IMG_0921.MOV");
+    VideoCapture cap("D:\\IronDrone\\MDT\\assets\\test3.mp4");
     if (!cap.isOpened()) {
 
-        cout << "cannot open camera";
+        std::cout << "cannot open camera" << std::endl;
 
     }
 
-    // cap >> prevFrame;
-    // resize(prevFrame, prevFrame, Size(), 0.3,0.3);
-    // cvtColor(prevFrame, prevFrame, COLOR_BGR2GRAY);
-
-    // detector->detect(prevFrame, prevFrameKeyPoints);
-    // prevFramePoints = toPoints(prevFrameKeyPoints);
-
+    Mat frame, grayFrame;
+    Rect boundingBox;
+    CMT tracker = CMT();
+    bool isTracking = false;
+    int i = 1;
+    NavigationController navigationController;    
+    
     while (true) 
     {
-
         cap >> frame;
         
         if(frame.empty())
-            break;
-
-        // resize(frame, frame, Size(), 0.3,0.3);
-        
-        // cvtColor(frame, currFrame, COLOR_BGR2GRAY);
-
-
-        // vector<float> err;
-        // vector<unsigned char> status;
-        // vector<Point2f> currFramePoints;
-
-        // calcOpticalFlowPyrLK(prevFrame, currFrame, prevFramePoints, currFramePoints, status, err, Size(21,21), 3, cv::TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 30, (0.01)), OPTFLOW_LK_GET_MIN_EIGENVALS);
-
-        
-        // vector<float> distances;
-        // vector<Point2f> prevFrameGoodPoints;
-        // vector<Point2f> currFrameGoodPoints;
-        // for (int i=0; i<prevFramePoints.size(); i++)
-        // {
-            
-        //     if (status[i] == 1 && err[i] < 1)
-        //     {
-        //         float distance = norm(prevFramePoints[i] - currFramePoints[i]);
-        //         prevFrameGoodPoints.push_back(prevFramePoints[i]);
-        //         currFrameGoodPoints.push_back(currFramePoints[i]);
-        //         distances.push_back(distance);
-        //         // cout << "err: " << err[i] << " status: " << (int)status[i]  << " distance: " << distance << endl;
-        //     }
-        // }
-
-        // Mat distancesMat(distances);
-        // distancesMat = distancesMat.reshape(1);
-
-        // Mat labels, centers;
-        // kmeans(distancesMat, 2, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 10, 1.0), 3, KMEANS_PP_CENTERS, centers);
-
-        // map<int, vector<Point2f>> clusteredPoints;
-        // for (size_t i = 0; i < prevFrameGoodPoints.size(); ++i) {
-        //     int label = labels.at<int>(i);
-        //     clusteredPoints[label].push_back(currFrameGoodPoints[i]);
-        // }
-
-        // Scalar color = Scalar(255, 0, 0); // Blue color for the second cluster
-
-        // int smallerClusterSize = INT_MAX;
-        // int smallerClusterLabel;
-
-        // // Find the smaller cluster
-        // for (const auto& cluster : clusteredPoints) {
-        //     if (cluster.second.size() < smallerClusterSize) {
-        //         smallerClusterSize = cluster.second.size();
-        //         smallerClusterLabel = cluster.first;
-        //     }
-        // }
-
-        // for (const auto& cluster : clusteredPoints) {
-        //     if (cluster.first == smallerClusterLabel) {
-        //         for (const auto& point : cluster.second) {
-        //             circle(frame, point, 3, color, -1); // Draw filled circle for the smaller cluster
-        //         }
-        //     }
-        // }
-
-
-        fgbg->clear();
-
-        Mat mask;
-
-        fgbg->apply(frame,mask);
-
-        vector<vector<Point>> contours;
-
-        threshold(mask, mask, 200, 255, THRESH_BINARY);
-
-        Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(3,3));
-        morphologyEx(mask, mask, MORPH_OPEN, kernel);
-        
-        findContours(mask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-
-        for (auto &contour : contours)
         {
-            if (contourArea(contour) > 0.0005*frame.size().area())
-                rectangle(frame, boundingRect(contour), Scalar(0, 255, 0), 8);
+            break;
         }
 
-        // prevFrame = currFrame.clone();
-        // detector->detect(prevFrame, prevFrameKeyPoints);
-        // prevFramePoints = toPoints(prevFrameKeyPoints);
-        
-        imshow("Stream", frame);
+        cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
 
-        int key = waitKey(1);
+        std::cout << "Start proccesing frame #" << i << std::endl;
+        std::cout << "Tracking: " << (isTracking ? "yes" : "no" ) << std::endl;
+
+        // Detection
+        if (!isTracking)
+        {
+            std::vector<Detection> output = inf.runInference(frame);
+            int detections = output.size();
+            std::cout << "Number of detections: " << detections << std::endl;
+            if (detections > 0)
+            {
+                Detection detection = output[0];
+                for (int j=1; j<detections; j++)
+                    if(output[i].confidence > detection.confidence)
+                        detection = output[j];
+                if(detection.confidence > 0.6)
+                {
+                    boundingBox = detection.box;
+                    tracker.initialize(grayFrame, boundingBox);
+                    isTracking = true;
+                    std::cout << "Found drone with confidence=" << detection.confidence << " in boundingBox=" << boundingBox << std::endl;
+                }
+                        
+            }
+        }
+        else
+        {
+            tracker.processFrame(grayFrame);
+
+            if(0.1*tracker.init_points_active_size < tracker.points_active.size() && tracker.points_active.size() > 20)
+            {
+                Point2f vertices[4];
+                tracker.bb_rot.points(vertices);
+                for(size_t i = 0; i < tracker.points_active.size(); i++)
+                {
+                    circle(frame, tracker.points_active[i], 2, Scalar(255,0,0));
+                }
+                for (int i = 0; i < 4; i++)
+                {
+                    line(frame, vertices[i], vertices[(i+1)%4], Scalar(255,0,0), 2);
+                }
+
+                std::cout << "Active points: " << tracker.points_active.size() << std::endl;
+                
+                // navigationController.navigateToBox(frame, tracker.bb_rot);
+                
+            }
+            else
+            {
+                isTracking = false;
+                tracker = CMT();
+
+            }
+        }
+
+        i++;
+        cv::imshow("Stream", frame);
+
+        int key = cv::waitKey(1);
         
         if (key != -1)
         {
             break;
         }
     }
+
+    std::cout << "Finished" << std::endl;
+    
+    destroyAllWindows();
+    cap.release();
 
     return 0;
 }

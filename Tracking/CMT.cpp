@@ -9,7 +9,6 @@ void CMT::initialize(const Mat im_gray, const Rect rect)
 
     //Remember initial image
     im_prev = im_gray;
-
     //Compute center of rect
     Point2f center = Point2f(rect.x + rect.width/2.0, rect.y + rect.height/2.0);
 
@@ -19,7 +18,7 @@ void CMT::initialize(const Mat im_gray, const Rect rect)
     //Initialize detector and descriptor
 #if CV_MAJOR_VERSION > 2
     detector = cv::FastFeatureDetector::create();
-    descriptor = cv::ORB::create();
+    descriptor = cv::BRISK::create();
 #else
     detector = FeatureDetector::create(str_detector);
     descriptor = DescriptorExtractor::create(str_descriptor);
@@ -101,8 +100,7 @@ void CMT::initialize(const Mat im_gray, const Rect rect)
     init_points_active_size = points_active.size();
 }
 
-void CMT::processFrame(Mat im_gray) {
-
+void CMT::processFrame(const Mat im_gray) {
     //Track keypoints
     vector<Point2f> points_tracked;
     vector<unsigned char> status;
@@ -112,7 +110,9 @@ void CMT::processFrame(Mat im_gray) {
     vector<int> classes_tracked;
     for (size_t i = 0; i < classes_active.size(); i++)
     {
-        if (status[i])
+        
+        if (i < status.size() && status[i])
+        // if (status[i])
         {
             classes_tracked.push_back(classes_active[i]);
         }
@@ -136,12 +136,12 @@ void CMT::processFrame(Mat im_gray) {
     vector<int> classes_fused;
     fusion.preferFirst(points_tracked, classes_tracked, points_matched_global, classes_matched_global,
             points_fused, classes_fused);
-
+        
     //Estimate scale and rotation from the fused points
     float scale;
     float rotation;
     consensus.estimateScaleRotation(points_fused, classes_fused, scale, rotation);
-
+    
     //Find inliers and the center of their votes
     Point2f center;
     vector<Point2f> points_inlier;

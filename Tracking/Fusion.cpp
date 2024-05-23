@@ -1,7 +1,7 @@
 #include "Fusion.h"
 
 namespace cmt {
-
+    
 void Fusion::preferFirst(const vector<Point2f> & points_first, const vector<int> & classes_first,
     const vector<Point2f> & points_second, const vector<int> & classes_second,
     vector<Point2f> & points_fused, vector<int> & classes_fused)
