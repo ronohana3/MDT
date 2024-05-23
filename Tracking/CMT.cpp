@@ -8,7 +8,8 @@ void CMT::initialize(const Mat im_gray, const Rect rect)
     size_initial = rect.size();
 
     //Remember initial image
-    im_prev = im_gray;
+    im_prev = im_gray.clone();
+
     //Compute center of rect
     Point2f center = Point2f(rect.x + rect.width/2.0, rect.y + rect.height/2.0);
 
@@ -167,7 +168,7 @@ void CMT::processFrame(const Mat im_gray) {
     bb_rot = RotatedRect(center,  size_initial * scale, rotation/CV_PI * 180);
 
     //Remember current image
-    im_prev = im_gray;
+    im_gray.copyTo(im_prev);
 }
 
 } /* namespace CMT */
