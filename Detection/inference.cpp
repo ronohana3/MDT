@@ -126,13 +126,6 @@ std::vector<Detection> Inference::runInference(const cv::Mat &input)
         result.class_id = class_ids[idx];
         result.confidence = confidences[idx];
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<int> dis(100, 255);
-        result.color = cv::Scalar(dis(gen),
-                                  dis(gen),
-                                  dis(gen));
-
         result.className = classes[result.class_id];
         result.box = boxes[idx];
 

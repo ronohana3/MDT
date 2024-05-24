@@ -6,9 +6,7 @@
 class NavigationController 
 {
 public:
-    NavigationController() {}
-    void navigateToBox(cv::Mat &frame, cv::RotatedRect &box);
-
+    NavigationController() {};
 };
 
 #endif

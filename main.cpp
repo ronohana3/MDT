@@ -6,7 +6,7 @@
 
 #include "Tracking/CMT.h"
 #include "Detection/inference.h"
-#include "Navigation/NavigationController.hpp"
+#include "Controllers/DroneController.hpp"
 
 using namespace cv;
 using namespace std;
@@ -18,24 +18,19 @@ int main()
     Inference inf("D:\\IronDrone\\MDT\\Detection\\best.onnx", cv::Size(640, 640));
 
     namedWindow("Stream");
-    VideoCapture cap("D:\\IronDrone\\MDT\\assets\\test3.mp4");
-    if (!cap.isOpened()) {
-
-        std::cout << "cannot open camera" << std::endl;
-
-    }
+    
 
     Mat frame, grayFrame;
     Rect boundingBox;
     CMT tracker = CMT();
     bool isTracking = false;
     int i = 1;
-    NavigationController navigationController;    
+    DroneController drone("D:\\IronDrone\\MDT\\assets\\test3.mp4");    
     
     while (true) 
     {
-        cap >> frame;
-        
+        drone.getFrame(frame);
+
         if(frame.empty())
         {
             break;
@@ -87,7 +82,7 @@ int main()
 
                 std::cout << "Active points: " << tracker.points_active.size() << std::endl;
                 
-                // navigationController.navigateToBox(frame, tracker.bb_rot);
+                drone.navigateToBox(frame, tracker.bb_rot);
                 
             }
             else
@@ -112,7 +107,6 @@ int main()
     std::cout << "Finished" << std::endl;
     
     destroyAllWindows();
-    cap.release();
 
     return 0;
 }
