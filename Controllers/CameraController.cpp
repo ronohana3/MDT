@@ -1,29 +1,38 @@
 #include "CameraController.hpp"
-
-CameraController::CameraController(int deviceId)
-{
-    cap = cv::VideoCapture(deviceId);
-    if (!cap.isOpened()) {
-
-        std::cout << "cannot open camera with id=" << deviceId << std::endl;
-    }
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+#include <libavutil/imgutils.h>
 }
 
-CameraController::CameraController(std::string path)
-{
-    cap = cv::VideoCapture(path);
-    if (!cap.isOpened()) {
 
-        std::cout << "cannot open file " << path << std::endl;
-    }
+
+CameraController::CameraController(std::string hostAddress, int port) : socketClient(hostAddress, port)
+{
+    // connect to stream server
+    socketClient.open();
 }
 
 CameraController::~CameraController()
-{
-    cap.release();
+{   
+    // disconnect from stream server
+    socketClient.close();
 }
 
 void CameraController::getFrame(cv::Mat &dst)
 {
-    cap >> dst;
+    // send a request to server for a frame
+    char buffer[100000];
+    std::vector<uchar> data;
+
+
+    int valread = socketClient.recieve(buffer, sizeof(buffer));
+    if (valread == 0) {
+        return;
+    }
+
+    cv::Mat matImg;
+    matImg = cv::imdecode(cv::Mat(1, valread, CV_8UC1, buffer), cv::IMREAD_UNCHANGED);
+    matImg.copyTo(dst);
 }

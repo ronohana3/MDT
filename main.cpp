@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
+#include <chrono>
 
 #include <opencv2/opencv.hpp>
 
@@ -12,9 +13,16 @@ using namespace cv;
 using namespace std;
 using namespace cmt;
 
-int main()
-{
 
+
+
+#define HOST_ADDRESS "172.16.212.67"
+#define NAVIGATION_PORT 10000
+#define CAMERA_PORT 9999
+
+
+void runProgram()
+{
     Inference inf("D:\\IronDrone\\MDT\\Detection\\best.onnx", cv::Size(640, 640));
 
     namedWindow("Stream");
@@ -25,15 +33,23 @@ int main()
     CMT tracker = CMT();
     bool isTracking = false;
     int i = 1;
-    DroneController drone("D:\\IronDrone\\MDT\\assets\\test3.mp4");    
-    
+    std::cout << "FFmpeg support : " << cv::getBuildInformation().find("FFmpeg") << std::endl;
+
+    DroneController drone(HOST_ADDRESS, NAVIGATION_PORT, CAMERA_PORT);
+    // drone.takeoff();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    // drone.scan(boundingBox);
+    // std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    // drone.land();
+
     while (true) 
     {
         drone.getFrame(frame);
 
         if(frame.empty())
         {
-            break;
+            std::cout << "Empty Frame" << std::endl;
+            continue;
         }
 
         cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
@@ -59,8 +75,7 @@ int main()
                     tracker.initialize(grayFrame, boundingBox);
                     isTracking = true;
                     std::cout << "Found drone with confidence=" << detection.confidence << " in boundingBox=" << boundingBox << std::endl;
-                }
-                        
+                }          
             }
         }
         else
@@ -82,7 +97,7 @@ int main()
 
                 std::cout << "Active points: " << tracker.points_active.size() << std::endl;
                 
-                drone.navigateToBox(frame, tracker.bb_rot);
+                // drone.moveTowardsBox(tracker.bb_rot.boundingRect());
                 
             }
             else
@@ -105,8 +120,12 @@ int main()
     }
 
     std::cout << "Finished" << std::endl;
-    
-    destroyAllWindows();
 
+    cv::destroyAllWindows();
+}
+
+int main()
+{
+    runProgram();
     return 0;
 }

@@ -7,14 +7,16 @@
 class DroneController 
 {
 public:
-    DroneController(std::string cameraStreamPath);
-    DroneController(int cameraId);
+    DroneController(std::string hostAddress, int navigationPort, int CameraPort);
     ~DroneController();
-    void navigateToBox(const cv::Mat &frame, const cv::RotatedRect &box);
+    void moveTowardsBox(const cv::Rect box);
+    void takeoff();
+    void land();
+    void scan(const cv::Rect box);
     void getFrame(cv::Mat &dst);
 private:
-    NavigationController navigationController;
-    CameraController camera;
+    NavigationController* navigationController;
+    CameraController* cameraController;
 
 };
 

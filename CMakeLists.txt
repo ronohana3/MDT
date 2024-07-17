@@ -19,6 +19,7 @@ set(SOURCE_FILES
     Controllers/NavigationController.cpp
     Controllers/CameraController.cpp
     Controllers/DroneController.cpp
+    Utils/SocketClient.cpp
     main.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

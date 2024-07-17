@@ -3,16 +3,20 @@
 
 #include <opencv2/opencv.hpp>
 #include <string>
+#include "../Utils/SocketClient.hpp"
+
+#define FRAME_WIDTH 1280
+#define FRAME_HEIGHT 720
+#define FRAME_AREA FRAME_WIDTH * FRAME_HEIGHT
 
 class CameraController 
 {
 public:
-    CameraController(int deviceId);
-    CameraController(std::string path);
+    CameraController(std::string hostAddress, int port);
     ~CameraController();
     void getFrame(cv::Mat &dst);
 private:
-    cv::VideoCapture cap;
+SocketClient socketClient;
 };
 
 #endif
