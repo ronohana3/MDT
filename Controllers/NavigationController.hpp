@@ -18,14 +18,14 @@ class NavigationController
 public:
     NavigationController(std::string hostAddress, int port);
     ~NavigationController();
-    void moveTowardsBox(const cv::Rect &box);
-    void rotateInPlace(bool isCw);
-    void takeoff();
-    void land();
+    void MoveTowardsBox(const cv::Rect &box);
+    void RotateInPlace(bool isCw);
+    void Takeoff();
+    void Land();
 private:
-    SocketClient socketClient;
-    void sendCommand(float Vz, float Vy, float W);
-    void sendCommand(std::string command);
+    SocketClient m_socketClient;
+    void SendCommand(float Vz, float Vy, float W);
+    void SendCommand(std::string command);
 };
 
 #endif

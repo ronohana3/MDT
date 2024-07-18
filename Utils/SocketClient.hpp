@@ -11,10 +11,10 @@ class SocketClient
 public:
     SocketClient(std::string hostAddress, int port);
     ~SocketClient() {};
-    int open();
-    int close();
-    int sendPayload(char * payload);
-    int recieve(char * buffer, size_t bufferSize);
+    int Open();
+    int Close();
+    int SendPayload(char * payload);
+    int Receive(char * buffer, size_t bufferSize);
 
 private:
     int m_port;

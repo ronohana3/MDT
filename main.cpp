@@ -9,14 +9,8 @@
 #include "Detection/inference.h"
 #include "Controllers/DroneController.hpp"
 
-using namespace cv;
-using namespace std;
-using namespace cmt;
 
-
-
-
-#define HOST_ADDRESS "172.16.212.67"
+#define HOST_ADDRESS "192.168.0.4"
 #define NAVIGATION_PORT 10000
 #define CAMERA_PORT 9999
 
@@ -25,15 +19,14 @@ void runProgram()
 {
     Inference inf("D:\\IronDrone\\MDT\\Detection\\best.onnx", cv::Size(640, 640));
 
-    namedWindow("Stream");
+    cv::namedWindow("Stream");
     
 
-    Mat frame, grayFrame;
-    Rect boundingBox;
-    CMT tracker = CMT();
+    cv::Mat frame, grayFrame;
+    cv::Rect boundingBox;
+    cmt::CMT tracker = cmt::CMT();
     bool isTracking = false;
     int i = 1;
-    std::cout << "FFmpeg support : " << cv::getBuildInformation().find("FFmpeg") << std::endl;
 
     DroneController drone(HOST_ADDRESS, NAVIGATION_PORT, CAMERA_PORT);
     // drone.takeoff();
@@ -44,7 +37,7 @@ void runProgram()
 
     while (true) 
     {
-        drone.getFrame(frame);
+        drone.GetFrame(frame);
 
         if(frame.empty())
         {
@@ -52,7 +45,7 @@ void runProgram()
             continue;
         }
 
-        cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
+        cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY);
 
         std::cout << "Start proccesing frame #" << i << std::endl;
         std::cout << "Tracking: " << (isTracking ? "yes" : "no" ) << std::endl;
@@ -88,11 +81,11 @@ void runProgram()
                 tracker.bb_rot.points(vertices);
                 for(size_t i = 0; i < tracker.points_active.size(); i++)
                 {
-                    circle(frame, tracker.points_active[i], 2, Scalar(255,0,0));
+                    cv::circle(frame, tracker.points_active[i], 2, cv::Scalar(255,0,0));
                 }
                 for (int i = 0; i < 4; i++)
                 {
-                    line(frame, vertices[i], vertices[(i+1)%4], Scalar(255,0,0), 2);
+                    cv::line(frame, vertices[i], vertices[(i+1)%4], cv::Scalar(255,0,0), 2);
                 }
 
                 std::cout << "Active points: " << tracker.points_active.size() << std::endl;
@@ -103,7 +96,7 @@ void runProgram()
             else
             {
                 isTracking = false;
-                tracker = CMT();
+                tracker = cmt::CMT();
 
             }
         }

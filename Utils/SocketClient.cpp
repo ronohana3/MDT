@@ -8,7 +8,7 @@ SocketClient::SocketClient(std::string hostAddress, int port)
     m_hostAddress = hostAddress;
 
 }
-int SocketClient::open()
+int SocketClient::Open()
 {
     if (WSAStartup(MAKEWORD(2, 2), &m_wsaData) != 0) {
         std::cerr << "WSAStartup failed" << std::endl;
@@ -35,19 +35,19 @@ int SocketClient::open()
     return 0;
 }
 
-int SocketClient::close()
+int SocketClient::Close()
 {
     closesocket(m_sockfd);
     WSACleanup();
     return 0;
 }
 
-int SocketClient::sendPayload(char * payload)
+int SocketClient::SendPayload(char *payload)
 {
     return send(m_sockfd, payload, strlen(payload), 0);
 }
 
-int SocketClient::recieve(char * buffer, size_t bufferSize)
+int SocketClient::Receive(char *buffer, size_t bufferSize)
 {
     return recv(m_sockfd, buffer, bufferSize, 0);
 }

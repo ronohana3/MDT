@@ -2,40 +2,40 @@
 
 DroneController::DroneController(std::string hostAddress, int navigationPort, int CameraPort)
 {
-    navigationController = new NavigationController(hostAddress, navigationPort);
-    cameraController = new CameraController(hostAddress, CameraPort);
+    m_navigationController = new NavigationController(hostAddress, navigationPort);
+    m_cameraController = new CameraController(hostAddress, CameraPort);
 }
 
 DroneController::~DroneController() 
 {
-    delete navigationController;
-    delete cameraController;
+    delete m_navigationController;
+    delete m_cameraController;
 }
 
-void DroneController::getFrame(cv::Mat &dst)
+void DroneController::GetFrame(cv::Mat &dst)
 {
-    cameraController->getFrame(dst);
+    m_cameraController->GetFrame(dst);
 }
 
-void DroneController::moveTowardsBox(const cv::Rect box)
+void DroneController::MoveTowardsBox(const cv::Rect box)
 { 
-    navigationController->moveTowardsBox(box);
+    m_navigationController->MoveTowardsBox(box);
 }
 
-void DroneController::scan(const cv::Rect box)
+void DroneController::Scan(const cv::Rect box)
 { 
     bool isCw = true;
     if (!box.empty())
         isCw = (box.x + box.width/2) > FRAME_WIDTH/2;
-    navigationController->rotateInPlace(isCw);
+    m_navigationController->RotateInPlace(isCw);
 }
 
-void DroneController::takeoff()
+void DroneController::Takeoff()
 {
-    navigationController->takeoff();
+    m_navigationController->Takeoff();
 }
 
-void DroneController::land()
+void DroneController::Land()
 {
-    navigationController->land();
+    m_navigationController->Land();
 }

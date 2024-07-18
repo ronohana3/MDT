@@ -2,24 +2,24 @@
 
 Inference::Inference(const std::string &onnxModelPath, const cv::Size &modelInputShape)
 {
-    modelPath = onnxModelPath;
-    modelShape = modelInputShape;
+    m_modelPath = onnxModelPath;
+    m_modelShape = modelInputShape;
     
-    loadOnnxNetwork();
+    LoadOnnxNetwork();
 }
 
 std::vector<Detection> Inference::runInference(const cv::Mat &input)
 {
     cv::Mat modelInput = input;
-    if (letterBoxForSquare && modelShape.width == modelShape.height)
-        modelInput = formatToSquare(modelInput);
+    if (m_letterBoxForSquare && m_modelShape.width == m_modelShape.height)
+        modelInput = FormatToSquare(modelInput);
 
     cv::Mat blob;
-    cv::dnn::blobFromImage(modelInput, blob, 1.0/255.0, modelShape, cv::Scalar(), true, false);
-    net.setInput(blob);
+    cv::dnn::blobFromImage(modelInput, blob, 1.0/255.0, m_modelShape, cv::Scalar(), true, false);
+    m_net.setInput(blob);
 
     std::vector<cv::Mat> outputs;
-    net.forward(outputs, net.getUnconnectedOutLayersNames());
+    m_net.forward(outputs, m_net.getUnconnectedOutLayersNames());
 
     int rows = outputs[0].size[1];
     int dimensions = outputs[0].size[2];
@@ -38,8 +38,8 @@ std::vector<Detection> Inference::runInference(const cv::Mat &input)
     }
     float *data = (float *)outputs[0].data;
 
-    float x_factor = modelInput.cols / modelShape.width;
-    float y_factor = modelInput.rows / modelShape.height;
+    float x_factor = modelInput.cols / m_modelShape.width;
+    float y_factor = modelInput.rows / m_modelShape.height;
 
     std::vector<int> class_ids;
     std::vector<float> confidences;
@@ -51,15 +51,15 @@ std::vector<Detection> Inference::runInference(const cv::Mat &input)
         {
             float *classes_scores = data+4;
 
-            cv::Mat scores(1, classes.size(), CV_32FC1, classes_scores);
+            cv::Mat scores(1, (int)m_classes.size(), CV_32FC1, classes_scores);
             cv::Point class_id;
             double maxClassScore;
 
             minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
 
-            if (maxClassScore > modelScoreThreshold)
+            if (maxClassScore > m_modelScoreThreshold)
             {
-                confidences.push_back(maxClassScore);
+                confidences.push_back((float)maxClassScore);
                 class_ids.push_back(class_id.x);
 
                 float x = data[0];
@@ -80,17 +80,17 @@ std::vector<Detection> Inference::runInference(const cv::Mat &input)
         {
             float confidence = data[4];
 
-            if (confidence >= modelConfidenceThreshold)
+            if (confidence >= m_modelConfidenceThreshold)
             {
                 float *classes_scores = data+5;
 
-                cv::Mat scores(1, classes.size(), CV_32FC1, classes_scores);
+                cv::Mat scores(1, m_classes.size(), CV_32FC1, classes_scores);
                 cv::Point class_id;
                 double max_class_score;
 
                 minMaxLoc(scores, 0, &max_class_score, 0, &class_id);
 
-                if (max_class_score > modelScoreThreshold)
+                if (max_class_score > m_modelScoreThreshold)
                 {
                     confidences.push_back(confidence);
                     class_ids.push_back(class_id.x);
@@ -115,7 +115,7 @@ std::vector<Detection> Inference::runInference(const cv::Mat &input)
     }
 
     std::vector<int> nms_result;
-    cv::dnn::NMSBoxes(boxes, confidences, modelScoreThreshold, modelNMSThreshold, nms_result);
+    cv::dnn::NMSBoxes(boxes, confidences, m_modelScoreThreshold, m_modelNMSThreshold, nms_result);
 
     std::vector<Detection> detections{};
     for (unsigned long i = 0; i < nms_result.size(); ++i)
@@ -126,7 +126,7 @@ std::vector<Detection> Inference::runInference(const cv::Mat &input)
         result.class_id = class_ids[idx];
         result.confidence = confidences[idx];
 
-        result.className = classes[result.class_id];
+        result.className = m_classes[result.class_id];
         result.box = boxes[idx];
 
         detections.push_back(result);
@@ -135,14 +135,14 @@ std::vector<Detection> Inference::runInference(const cv::Mat &input)
     return detections;
 }
 
-void Inference::loadOnnxNetwork()
+void Inference::LoadOnnxNetwork()
 {
-    net = cv::dnn::readNetFromONNX(modelPath);
-    net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-    net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+    m_net = cv::dnn::readNetFromONNX(m_modelPath);
+    m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+    m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 }
 
-cv::Mat Inference::formatToSquare(const cv::Mat &source)
+cv::Mat Inference::FormatToSquare(const cv::Mat &source)
 {
     int col = source.cols;
     int row = source.rows;

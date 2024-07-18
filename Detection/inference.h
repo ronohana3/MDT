@@ -27,23 +27,22 @@ public:
     std::vector<Detection> runInference(const cv::Mat &input);
 
 private:
-    void loadOnnxNetwork();
-    cv::Mat formatToSquare(const cv::Mat &source);
+    void LoadOnnxNetwork();
+    cv::Mat FormatToSquare(const cv::Mat &source);
 
-    std::string modelPath{};
-    bool cudaEnabled{};
+    std::string m_modelPath{};
 
-    std::vector<std::string> classes{"drone"};
+    std::vector<std::string> m_classes{"drone"};
 
-    cv::Size2f modelShape{};
+    cv::Size2f m_modelShape{};
 
-    float modelConfidenceThreshold {0.25};
-    float modelScoreThreshold      {0.45};
-    float modelNMSThreshold        {0.50};
+    float m_modelConfidenceThreshold {0.25};
+    float m_modelScoreThreshold      {0.45};
+    float m_modelNMSThreshold        {0.50};
 
-    bool letterBoxForSquare = true;
+    bool m_letterBoxForSquare = true;
 
-    cv::dnn::Net net;
+    cv::dnn::Net m_net;
 };
 
 #endif // INFERENCE_H
