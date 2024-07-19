@@ -83,4 +83,5 @@ int CameraController::GetFrame(cv::Mat &dst)
         mat.release();
         return true;
     }
+    return false;
 }

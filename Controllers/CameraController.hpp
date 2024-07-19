@@ -15,7 +15,7 @@ extern "C" {
 #define FRAME_WIDTH 1280
 #define FRAME_HEIGHT 720
 #define FRAME_AREA FRAME_WIDTH * FRAME_HEIGHT
-#define FRAME_BUFFER_SIZE 100000
+#define FRAME_BUFFER_SIZE FRAME_WIDTH * FRAME_HEIGHT
 
 class CameraController 
 {
