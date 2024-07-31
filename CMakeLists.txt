@@ -4,6 +4,8 @@ project(IronDrone)
 
 set (CMAKE_CXX_STANDARD 17)
 find_package(OpenCV REQUIRED)
+
+find_package(nlohmann_json CONFIG REQUIRED)
 # include_directories(${OpenCV_INCLUDE_DIRS})
 
 set(SOURCE_FILES
@@ -23,8 +25,6 @@ set(SOURCE_FILES
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-find_package(FFMPEG REQUIRED)
-target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
-target_link_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARY_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES}  ${OpenCV_LIBS})
+
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json  ${OpenCV_LIBS})
 

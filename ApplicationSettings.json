@@ -1,0 +1,28 @@
+{
+    "Camera" : {
+        "Parameters" : {
+        "width" : 960,
+        "height" : 540,
+        "fx" : 733.68458111,
+        "fy" : 733.43123395,
+        "cx" : 479.83511889,
+        "cy" : 269.20308999
+        },
+        "serverAddress" : "127.0.0.1",
+        "serverPort" : 9998
+    },
+    "Navigation" : {
+        "Velocities" : {
+            "scanRotationSpeed": 0.5,
+            "vyToLv": 0.0006, 
+            "vzToRv": 0.0005,
+            "wToLh": 1,
+            "vySat": 15,
+            "vzSat": 15,
+            "wSat": 0.3
+        },
+        "serverAddress" : "127.0.0.1",
+        "serverPort" : 9999
+    },
+    "onnxPath" : "D:\\IronDrone\\MDT\\Detection\\best.onnx"
+}

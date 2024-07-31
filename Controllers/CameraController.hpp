@@ -1,35 +1,31 @@
-#ifndef CAMERA_CONTROLLER_H
-#define CAMERA_CONTROLLER_H
+#ifndef CAMERA_CONTROLLER_HPP
+#define CAMERA_CONTROLLER_HPP
 
 #include <opencv2/opencv.hpp>
-#include <string>
 #include "../Utils/SocketClient.hpp"
+#include <string>
 
-extern "C" {
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
-    #include <libswscale/swscale.h>
-    #include <libavutil/imgutils.h>
-}
-
-#define FRAME_WIDTH 1280
-#define FRAME_HEIGHT 720
-#define FRAME_AREA FRAME_WIDTH * FRAME_HEIGHT
-#define FRAME_BUFFER_SIZE FRAME_WIDTH * FRAME_HEIGHT
-
-class CameraController 
+typedef struct sCamParam
 {
+    uint width;
+    uint height;
+    float fx;
+    float fy;
+    float cx;
+    float cy;
+    float f() { return (fx + fy)/2; };
+} CamParam;
+
+class CameraController {
 public:
-    CameraController(std::string hostAddress, int port);
+    CameraController(const CamParam& camParam, const std::string& hostAddress, int port);
     ~CameraController();
-    int GetFrame(cv::Mat &dst);
+
+    bool GetFrame(cv::Mat& dst);
+
 private:
+    const CamParam m_camParam;
     SocketClient m_socketClient;
-    AVCodecContext* m_codecContext;
-    AVFormatContext* m_formatContext;
-    AVFrame* m_avFrame;
-    AVPacket* m_avPacket;
-    SwsContext* m_swsContext;
 };
 
-#endif
+#endif // CAMERA_CONTROLLER_HPP

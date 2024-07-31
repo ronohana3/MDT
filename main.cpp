@@ -4,20 +4,46 @@
 #include <chrono>
 
 #include <opencv2/opencv.hpp>
+#include <nlohmann/json.hpp>
 
 #include "Tracking/CMT.h"
 #include "Detection/inference.h"
 #include "Controllers/DroneController.hpp"
 
-
-#define HOST_ADDRESS "192.168.0.4"
-#define NAVIGATION_PORT 10000
-#define CAMERA_PORT 9999
+// [[733.68458111   0.         479.83511889]
+//  [  0.         733.43123395 269.20308999]
+//  [  0.           0.           1.        ]]
+ // convertion from [cm/s] to controller joystick input [-1,1]
 
 
 void runProgram()
 {
-    Inference inf("D:\\IronDrone\\MDT\\Detection\\best.onnx", cv::Size(640, 640));
+    std::ifstream fSettings("D:\\IronDrone\\MDT\\ApplicationSettings.json");
+    nlohmann::json data = nlohmann::json::parse(fSettings);
+    fSettings.close();
+    std::cout << "1" << std::endl;
+    const CamParam camParam {
+        data["Camera"]["Parameters"]["width"],
+        data["Camera"]["Parameters"]["height"],
+        data["Camera"]["Parameters"]["fx"],
+        data["Camera"]["Parameters"]["fy"],
+        data["Camera"]["Parameters"]["cx"],
+        data["Camera"]["Parameters"]["cy"]
+    };
+
+
+    const NavParam navParam {
+        data["Navigation"]["Velocities"]["vySat"],
+        data["Navigation"]["Velocities"]["vzSat"],
+        data["Navigation"]["Velocities"]["wSat"],
+        data["Navigation"]["Velocities"]["vyToLv"],
+        data["Navigation"]["Velocities"]["vzToRv"],
+        data["Navigation"]["Velocities"]["wToLh"],
+        data["Navigation"]["Velocities"]["scanRotationSpeed"]
+    };
+
+
+    Inference inf(data["onnxPath"], cv::Size(640, 640));
 
     cv::namedWindow("Stream");
     
@@ -28,12 +54,15 @@ void runProgram()
     bool isTracking = false;
     int i = 1;
 
-    DroneController drone(HOST_ADDRESS, NAVIGATION_PORT, CAMERA_PORT);
-    // drone.takeoff();
-    // std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    // drone.scan(boundingBox);
-    // std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    // drone.land();
+    DroneController drone(navParam, camParam,
+                    data["Navigation"]["serverAddress"], 
+                    data["Camera"]["serverAddress"], 
+                    data["Navigation"]["serverPort"],
+                    data["Camera"]["serverPort"]);
+
+    std::cout << "1" << std::endl;
+    drone.Takeoff();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
     while (true) 
     {
@@ -47,12 +76,15 @@ void runProgram()
 
         cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY);
 
-        std::cout << "Start proccesing frame #" << i << std::endl;
+        std::cout << "Start proccesing frame " << frame.size() << "#" << i << std::endl;
         std::cout << "Tracking: " << (isTracking ? "yes" : "no" ) << std::endl;
 
         // Detection
         if (!isTracking)
         {
+            std::cout << "Start Scan" << std::endl;
+            drone.Scan(boundingBox);
+
             std::vector<Detection> output = inf.runInference(frame);
             int detections = output.size();
             std::cout << "Number of detections: " << detections << std::endl;
@@ -90,7 +122,7 @@ void runProgram()
 
                 std::cout << "Active points: " << tracker.points_active.size() << std::endl;
                 
-                // drone.moveTowardsBox(tracker.bb_rot.boundingRect());
+                drone.MoveTowardsBox(tracker.bb_rot.boundingRect());
                 
             }
             else
@@ -112,8 +144,10 @@ void runProgram()
         }
     }
 
+    drone.Stop();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    drone.Land();
     std::cout << "Finished" << std::endl;
-
     cv::destroyAllWindows();
 }
 
