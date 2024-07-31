@@ -13,16 +13,16 @@
     },
     "Navigation" : {
         "Velocities" : {
-            "scanRotationSpeed": 0.5,
+            "scanRotationSpeed": 0.1,
             "vyToLv": 0.0006, 
             "vzToRv": 0.0005,
-            "wToLh": 1,
+            "wToLh": 0.45,
             "vySat": 15,
             "vzSat": 15,
-            "wSat": 0.3
+            "wSat": 0.5
         },
-        "serverAddress" : "127.0.0.1",
-        "serverPort" : 9999
+        "serverAddress" : "10.0.0.15",
+        "serverPort" : 10000
     },
     "onnxPath" : "D:\\IronDrone\\MDT\\Detection\\best.onnx"
 }

@@ -10,18 +10,13 @@
 #include "Detection/inference.h"
 #include "Controllers/DroneController.hpp"
 
-// [[733.68458111   0.         479.83511889]
-//  [  0.         733.43123395 269.20308999]
-//  [  0.           0.           1.        ]]
- // convertion from [cm/s] to controller joystick input [-1,1]
-
-
 void runProgram()
 {
     std::ifstream fSettings("D:\\IronDrone\\MDT\\ApplicationSettings.json");
     nlohmann::json data = nlohmann::json::parse(fSettings);
     fSettings.close();
-    std::cout << "1" << std::endl;
+    
+
     const CamParam camParam {
         data["Camera"]["Parameters"]["width"],
         data["Camera"]["Parameters"]["height"],
@@ -60,7 +55,6 @@ void runProgram()
                     data["Navigation"]["serverPort"],
                     data["Camera"]["serverPort"]);
 
-    std::cout << "1" << std::endl;
     drone.Takeoff();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
@@ -76,14 +70,14 @@ void runProgram()
 
         cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY);
 
-        std::cout << "Start proccesing frame " << frame.size() << "#" << i << std::endl;
+        std::cout << "Start proccesing frame " << frame.size() << " #" << i << std::endl;
         std::cout << "Tracking: " << (isTracking ? "yes" : "no" ) << std::endl;
 
         // Detection
         if (!isTracking)
         {
-            std::cout << "Start Scan" << std::endl;
-            drone.Scan(boundingBox);
+            // std::cout << "Start Scan" << std::endl;
+            // drone.Scan(boundingBox);
 
             std::vector<Detection> output = inf.runInference(frame);
             int detections = output.size();
