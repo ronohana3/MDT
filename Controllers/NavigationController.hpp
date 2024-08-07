@@ -32,7 +32,6 @@ private:
     SocketClient m_socketClient;
     const CamParam m_camParam;
     const NavParam m_navParam;
-    void moveAlongDirection(const cv::Point3f &direction, const cv::Point3f &velocity);
     cv::Point3f pixelToDirection(const cv::Point2i &pixel);
     void SendCommand(float Vz, float Vy, float W, int timeout = 0);
     void SendCommand(std::string command);

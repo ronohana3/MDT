@@ -58,6 +58,11 @@ void runProgram()
     drone.Takeoff();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
+    // int fourcc = cv::VideoWriter::fourcc('M', 'J', 'P', 'G');
+    // string destVideoPath = "D:\\IronDrone\\MDT\\assets\\test_output.avi";
+    // cv::VideoWriter writer;
+    // writer.open(destVideoPath, fourcc, 20, cv::Size(960, 540));
+
     while (true) 
     {
         drone.GetFrame(frame);
@@ -130,6 +135,9 @@ void runProgram()
         i++;
         cv::imshow("Stream", frame);
 
+        // if (writer.isOpened())
+        //     writer.write(frame);
+
         int key = cv::waitKey(1);
         
         if (key != -1)
@@ -141,8 +149,11 @@ void runProgram()
     drone.Stop();
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     drone.Land();
+    
     std::cout << "Finished" << std::endl;
     cv::destroyAllWindows();
+
+    // writer.release();
 }
 
 int main()

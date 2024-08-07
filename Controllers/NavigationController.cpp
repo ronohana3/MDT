@@ -23,24 +23,34 @@ void NavigationController::MoveTowardsBox(const cv::Rect &box)
     
     cv::Point2i boxCenterPixel = cv::Point2i(box.x + box.width/2, box.y + box.height/2);
     float boxAreaToFrameAreaRatio = (float)box.area()/(m_camParam.height*m_camParam.width);
-    if (boxAreaToFrameAreaRatio < 0.3)
-    {
-        float vz = m_navParam.vzSat*(1 - boxAreaToFrameAreaRatio);
-        float vy = m_navParam.vySat*(1 - (2*boxCenterPixel.y)/m_camParam.height);
-        // float w = m_navParam.wSat*((2*boxCenterPixel.x)/m_camParam.width - 1);
-        float wSign = boxCenterPixel.x > m_camParam.cx ? 1 : -1; 
-        cv::Point3f velocity = cv::Point3f(vy, vz, wSign*m_navParam.wSat);
-
+    std::cout << "NavigationController: boxAreaToFrameAreaRatio: " << boxAreaToFrameAreaRatio << std::endl;
+    
+    
         cv::Point3f direction = pixelToDirection(boxCenterPixel);
 
-        moveAlongDirection(direction, velocity);
+        float vz = m_navParam.vzSat*(1 - boxAreaToFrameAreaRatio);
+        if (boxAreaToFrameAreaRatio > 0.075)
+        {
+            std::cout << "NavigationController: Box too big stop moving forward" << std::endl;
+            vz = 0; 
+        }
 
-    }
-    else
-    {
-        std::cout << "NavigationController: Box too big stopping" << std::endl;
-        SendCommand(0, 0, 0);
-    }
+        float vy = m_navParam.vySat*(1 - (float)(2*boxCenterPixel.y)/m_camParam.height);
+        if (std::abs(boxCenterPixel.y - (int)(m_camParam.height)/2) < 10)
+        {
+            vy = 0;
+        }
+        
+        float wSign = boxCenterPixel.x > m_camParam.cx ? 1 : -1; 
+        float yaw = std::acos(direction.z/(std::sqrt(direction.z*direction.z + direction.x*direction.x)));
+        float w = (yaw/0.5236) * wSign * m_navParam.wSat;
+
+        if (yaw < 0.0872)
+        {
+            w = 0;
+        }
+
+        SendCommand(vz, vy, w);
 }
 
 void NavigationController::RotateInPlace(bool isCw)
@@ -57,25 +67,6 @@ cv::Point3f NavigationController::pixelToDirection(const cv::Point2i &pixel)
     double ny = (pixel.y - m_camParam.cy) / f;
     cv::Point3f n = cv::Point3f(nx, ny, 1) / cv::norm(cv::Point3f(nx, ny, 1));
     return n;
-}
-
-void NavigationController::moveAlongDirection(const cv::Point3f &direction, const cv::Point3f &velocity)
-{
-    float angle = std::acos(direction.z/(std::sqrt(direction.z*direction.z + direction.x*direction.x)));
-    std::cout << "Angle: " << angle << std::endl;
-    float rotationVelocity = velocity.z; 
-    int timeToRotate = int((angle / abs(rotationVelocity))*1000); // in seconds
-    std::cout << "timeToRotate: " << timeToRotate << std::endl;
-    // SendCommand(VY_TO_LV(velocity[0]), VZ_TO_RV(velocity[1]), W_TO_LH(rotationVelocity));
-    if (angle > 0.0872)
-    {
-        SendCommand(0, 0, W_TO_LH(rotationVelocity), timeToRotate);
-    }
-    else
-    {
-        // SendCommand(0, 0, 0, timeToRotate);
-    }
-    
 }
 
 void NavigationController::Takeoff()
@@ -100,8 +91,6 @@ void NavigationController::SendCommand(float vz, float vy, float w, int timeout)
     if (timeout > 0)
     {
         snprintf(command, sizeof(command), "rc %.2f %.2f %.2f %.2f %d\r\n", W_TO_LH(w), VY_TO_LV(vy), 0.0, VZ_TO_RV(vz), timeout);
-        // wait for timeout to prevent two commands race conditions
-        std::this_thread::sleep_for(std::chrono::milliseconds(timeout));
     }
     else
     {

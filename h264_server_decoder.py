@@ -6,7 +6,7 @@ import cv2
 import threading
 
 # Connection details
-HOST = '10.0.0.15'
+HOST = '192.168.0.4'
 PORT_VIDEO = 9999
 PORT_SERVER = 9998
 
